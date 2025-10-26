@@ -58,69 +58,27 @@ const handleClick = (starPosition) => {
   }
 };
 </script>
+
 <template>
-  <div class="star-rating">
+  <div class="inline-flex items-center gap-0.5">
     <span
       v-for="star in maxStars"
       :key="star"
-      class="star"
-      :class="getStarClass(star)"
+      class="text-2xl transition-all duration-200 select-none"
+      :class="[
+        getStarClass(star),
+        editable ? 'cursor-pointer hover:scale-110' : '',
+      ]"
       @click="handleClick(star)"
     >
       {{ getStarIcon(star) }}
     </span>
-    <span v-if="showScore" class="rating-score">{{ rating.toFixed(1) }}</span>
+    <span
+      v-if="showScore"
+      class="ml-2 text-base font-semibold text-gray-800 dark:text-white"
+    >
+      {{ rating.toFixed(1) }}
+    </span>
   </div>
 </template>
-
-<style scoped>
-.star-rating {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-}
-
-.star {
-  font-size: 24px;
-  transition: all 0.2s ease;
-  user-select: none;
-}
-
-.star-full {
-  color: #ffd700; /* Gold */
-}
-
-.star-half {
-  color: #ffd700; /* Gold */
-}
-
-.star-empty {
-  color: #ddd; /* Light gray */
-}
-
-.star.editable {
-  cursor: pointer;
-}
-
-.star.editable:hover {
-  transform: scale(1.2);
-}
-
-.rating-score {
-  margin-left: 8px;
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
-}
-
-/* Dark mode support (optional) */
-@media (prefers-color-scheme: dark) {
-  .star-empty {
-    color: #555;
-  }
-
-  .rating-score {
-    color: #fff;
-  }
-}
-</style>
+<style scoped></style>

@@ -206,22 +206,15 @@
       "movieId": 1,
       "reviewer": "Alex",
       "comment": "Mind-blowing concept and execution!",
-      "score": 9.5,
+      "score": 7.5,
       "id": "1"
     },
     {
+      "id": "2",
       "movieId": 2,
       "reviewer": "Bob",
       "comment": "The Joker was phenomenal. A masterpiece.",
-      "score": 7.6,
-      "id": "2"
-    },
-    {
-      "movieId": 1,
-      "reviewer": "Nigga",
-      "comment": "fucking great movie",
-      "score": 9.5,
-      "id": "7ddd"
+      "score": 7.6
     }
   ]
 }

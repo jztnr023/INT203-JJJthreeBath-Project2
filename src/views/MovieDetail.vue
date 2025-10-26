@@ -8,7 +8,7 @@ import ReviewList from "../components/ReviewList.vue";
 import { useReviewStore } from '../stores/reviewstore.js';
 
 const route = useRoute();
-const reviewStore = useReviewStore(); // เพิ่มบรรทัดนี้
+const reviewStore = useReviewStore();
 const movieId = computed(() => parseInt(route.params.id));
 
 // State
@@ -17,8 +17,8 @@ const error = ref(null);
 const movie = ref(null);
 const reviews = ref([]);
 const showAddReviewForm = ref(false);
-const editingReview = ref(null); // เพิ่ม
-const isEditMode = ref(false); // เพิ่ม
+const editingReview = ref(null);
+const isEditMode = ref(false);
 
 // Mock Data (ชั่วคราว)
 const mockMovies = [

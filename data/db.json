@@ -1,17 +1,17 @@
 {
   "movies": [
     {
-      "id": 1,
+      "id": "1",
       "title": "Inception",
       "year": 2010,
       "genre": "Sci-Fi",
       "director": "Christopher Nolan",
       "poster": "https://image.tmdb.org/t/p/original/ljsZTbVsrQSqZgWeep2B1QiDKuh.jpg",
       "summary": "A thief who steals corporate secrets through dream-sharing technology is given the task of planting an idea.",
-      "rating": 9.0
+      "rating": 9
     },
     {
-      "id": 2,
+      "id": "2",
       "title": "The Dark Knight",
       "year": 2008,
       "genre": "Action",
@@ -21,7 +21,7 @@
       "rating": 9.5
     },
     {
-      "id": 3,
+      "id": "3",
       "title": "Interstellar",
       "year": 2014,
       "genre": "Adventure",
@@ -31,7 +31,7 @@
       "rating": 8.8
     },
     {
-      "id": 4,
+      "id": "4",
       "title": "Parasite",
       "year": 2019,
       "genre": "Thriller",
@@ -41,7 +41,7 @@
       "rating": 9.1
     },
     {
-      "id": 5,
+      "id": "5",
       "title": "The Shawshank Redemption",
       "year": 1994,
       "genre": "Drama",
@@ -51,7 +51,7 @@
       "rating": 9.3
     },
     {
-      "id": 6,
+      "id": "6",
       "title": "Avengers: Endgame",
       "year": 2019,
       "genre": "Action",
@@ -61,7 +61,7 @@
       "rating": 8.4
     },
     {
-      "id": 7,
+      "id": "7",
       "title": "Joker",
       "year": 2019,
       "genre": "Drama",
@@ -71,7 +71,7 @@
       "rating": 8.6
     },
     {
-      "id": 8,
+      "id": "8",
       "title": "Spider-Man: No Way Home",
       "year": 2021,
       "genre": "Action",
@@ -81,7 +81,7 @@
       "rating": 8.3
     },
     {
-      "id": 9,
+      "id": "9",
       "title": "Your Name",
       "year": 2016,
       "genre": "Romance",
@@ -91,7 +91,7 @@
       "rating": 8.9
     },
     {
-      "id": 10,
+      "id": "10",
       "title": "Whiplash",
       "year": 2014,
       "genre": "Drama",
@@ -101,17 +101,17 @@
       "rating": 8.5
     },
     {
-      "id": 11,
+      "id": "11",
       "title": "Titanic",
       "year": 1997,
       "genre": "Romance",
       "director": "James Cameron",
       "poster": "https://image.tmdb.org/t/p/w500/9xjZS2rlVxm8SFx8kPC3aIGCOYQ.jpg",
       "summary": "A young couple from different social classes fall in love aboard the Titanic.",
-      "rating": 8.0
+      "rating": 8
     },
     {
-      "id": 12,
+      "id": "12",
       "title": "The Matrix",
       "year": 1999,
       "genre": "Sci-Fi",
@@ -121,7 +121,7 @@
       "rating": 8.7
     },
     {
-      "id": 13,
+      "id": "13",
       "title": "The Social Network",
       "year": 2010,
       "genre": "Drama",
@@ -131,7 +131,7 @@
       "rating": 7.8
     },
     {
-      "id": 14,
+      "id": "14",
       "title": "The Lion King",
       "year": 1994,
       "genre": "Animation",
@@ -141,7 +141,7 @@
       "rating": 8.5
     },
     {
-      "id": 15,
+      "id": "15",
       "title": "Frozen",
       "year": 2013,
       "genre": "Animation",
@@ -151,7 +151,7 @@
       "rating": 7.4
     },
     {
-      "id": 16,
+      "id": "16",
       "title": "Coco",
       "year": 2017,
       "genre": "Animation",
@@ -161,7 +161,7 @@
       "rating": 8.4
     },
     {
-      "id": 17,
+      "id": "17",
       "title": "Up",
       "year": 2009,
       "genre": "Animation",
@@ -171,7 +171,7 @@
       "rating": 8.2
     },
     {
-      "id": 18,
+      "id": "18",
       "title": "Oppenheimer",
       "year": 2023,
       "genre": "Biography",
@@ -181,7 +181,7 @@
       "rating": 8.8
     },
     {
-      "id": 19,
+      "id": "19",
       "title": "Barbie",
       "year": 2023,
       "genre": "Comedy",
@@ -191,7 +191,7 @@
       "rating": 7.2
     },
     {
-      "id": 20,
+      "id": "20",
       "title": "Dune: Part One",
       "year": 2021,
       "genre": "Sci-Fi",
@@ -203,18 +203,25 @@
   ],
   "reviews": [
     {
-      "id": 1,
       "movieId": 1,
-      "reviewer": "Alice",
+      "reviewer": "Alex",
       "comment": "Mind-blowing concept and execution!",
-      "score": 9.5
+      "score": 9.5,
+      "id": "1"
     },
     {
-      "id": 2,
       "movieId": 2,
       "reviewer": "Bob",
       "comment": "The Joker was phenomenal. A masterpiece.",
-      "score": 10
+      "score": 7.6,
+      "id": "2"
+    },
+    {
+      "movieId": 1,
+      "reviewer": "Nigga",
+      "comment": "fucking great movie",
+      "score": 9.5,
+      "id": "7ddd"
     }
   ]
 }

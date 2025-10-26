@@ -2,10 +2,13 @@
 import { ref, onMounted, computed } from "vue";
 import { useRoute } from "vue-router";
 import StarRating from "../components/StarRating.vue";
+import ReviewForm from "../components/ReviewForm.vue"; 
+import ReviewList from "../components/ReviewList.vue"; 
 // import { useMovieStore } from '../stores/movieStore' // wait tm1
-// import { useReviewStore } from '../stores/reviewStore' // wait tm2
+import { useReviewStore } from '../stores/reviewstore.js';
 
 const route = useRoute();
+const reviewStore = useReviewStore(); // เพิ่มบรรทัดนี้
 const movieId = computed(() => parseInt(route.params.id));
 
 // State
@@ -14,6 +17,8 @@ const error = ref(null);
 const movie = ref(null);
 const reviews = ref([]);
 const showAddReviewForm = ref(false);
+const editingReview = ref(null); // เพิ่ม
+const isEditMode = ref(false); // เพิ่ม
 
 // Mock Data (ชั่วคราว)
 const mockMovies = [
@@ -42,50 +47,23 @@ const mockMovies = [
   },
 ];
 
-const mockReviews = [
-  {
-    id: 1,
-    movieId: 1,
-    reviewer: "Alice",
-    comment: "Mind-blowing concept and execution!",
-    score: 9.5,
-  },
-  {
-    id: 2,
-    movieId: 2,
-    reviewer: "Bob",
-    comment: "The Joker was phenomenal. A masterpiece.",
-    score: 10,
-  },
-  {
-    id: 3,
-    movieId: 2,
-    reviewer: "Charlie",
-    comment: "A thrilling experience from start to finish.",
-    score: 7.5,
-  },
-];
-
-// Fetch Movie (use mock data ชั่วคราว)
+// Fetch Movie
 const fetchMovie = async () => {
   loading.value = true;
   error.value = null;
 
   try {
-    // Simulate API call delay
     await new Promise((resolve) => setTimeout(resolve, 500));
-
-    // TODO: change to movieStore.fetchMovie(movieId) when tm1 done
+    
     const foundMovie = mockMovies.find((m) => m.id === movieId.value);
 
     if (!foundMovie) {
       movie.value = null;
     } else {
       movie.value = foundMovie;
-
-      // Fetch reviews for this movie
-      // TODO: change to reviewStore.fetchReviews(movieId) when tm2 done
-      reviews.value = mockReviews.filter((r) => r.movieId === movieId.value);
+      
+      // Fetch reviews from reviewStore
+      await reviewStore.fetchReviewsByMovieId(movieId.value);
     }
   } catch (err) {
     error.value = "Unable to load movie data. Please try again later.";
@@ -100,20 +78,60 @@ const handleImageError = (event) => {
   event.target.src = "https://via.placeholder.com/500x750?text=No+Image";
 };
 
-// Edit Review (Placeholder)
-const handleEdit = (review) => {
-  alert(
-    `✏️ Edit Review: ${review.comment}\n\n(Waiting for reviewStore.updateReview() from teammate...)`
-  );
+// Add Review
+const handleAddReview = async (reviewData) => {
+  try {
+    await reviewStore.addReview(reviewData);
+    showAddReviewForm.value = false;
+  } catch (error) {
+    alert("Failed to add review");
+  }
 };
 
-// Delete Review (Placeholder)
-const handleDelete = (review) => {
-  if (
-    confirm(`🗑️ Are you sure you want to delete ${review.reviewer}'s review?`)
-  ) {
-    alert("(Waiting for reviewStore.deleteReview() from teammate...)");
+// Edit Review
+const handleEditReview = (review) => {
+  editingReview.value = review;
+  isEditMode.value = true;
+  showAddReviewForm.value = true;
+};
+
+// Update Review
+const handleUpdateReview = async (reviewData) => {
+  try {
+    await reviewStore.updateReview(editingReview.value.id, reviewData);
+    showAddReviewForm.value = false;
+    isEditMode.value = false;
+    editingReview.value = null;
+  } catch (error) {
+    alert("Failed to update review");
   }
+};
+
+//  Delete Review
+const handleDeleteReview = async (reviewId) => {
+  if (confirm("Are you sure you want to delete this review?")) {
+    try {
+      await reviewStore.deleteReview(reviewId);
+    } catch (error) {
+      alert("Failed to delete review");
+    }
+  }
+};
+
+// Form Submit Handler
+const handleFormSubmit = (reviewData) => {
+  if (isEditMode.value) {
+    handleUpdateReview(reviewData);
+  } else {
+    handleAddReview(reviewData);
+  }
+};
+
+// Cancel Form
+const handleCancelForm = () => {
+  showAddReviewForm.value = false;
+  isEditMode.value = false;
+  editingReview.value = null;
 };
 
 // Lifecycle
@@ -233,84 +251,38 @@ onMounted(() => {
         <div class="flex justify-between items-center mb-8 flex-wrap gap-4">
           <h2 class="text-3xl font-bold text-black">Reviews</h2>
           <button
-            @click="showAddReviewForm = !showAddReviewForm"
+            v-if="!showAddReviewForm"
+            @click="showAddReviewForm = true"
             class="px-7 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-all hover:-translate-y-0.5"
           >
-            <span v-if="showAddReviewForm">✕ Cancel</span>
-            <span v-else>+ Add Review</span>
+            + Add Review
           </button>
         </div>
 
-        <!-- Add Review Form Placeholder -->
-        <div v-if="showAddReviewForm" class="mb-8">
-          <div
-            class="p-12 bg-gray-50 border-2 border-dashed border-red-600 rounded-xl text-center"
-          >
-            <div class="text-5xl mb-3">📝</div>
-            <p class="text-xl font-semibold text-black mb-2">Add Review Form</p>
-            <small class="text-sm text-gray-500"
-              >Waiting for ReviewForm.vue component...</small
-            >
-          </div>
-        </div>
+        <!-- Review Form (component) -->
+        <ReviewForm
+          v-if="showAddReviewForm"
+          :mode="isEditMode ? 'edit' : 'add'"
+          :review-data="editingReview"
+          :movie-id="movieId"
+          @submit="handleFormSubmit"
+          @cancel="handleCancelForm"
+        />
 
-        <!-- Reviews List -->
-        <div
-          v-if="reviews.length === 0"
-          class="text-center py-20 bg-gray-50 rounded-xl text-gray-500"
-        >
-          <p>No reviews yet. Be the first to review this movie!</p>
-        </div>
-
-        <div v-else class="flex flex-col gap-5">
-          <div
-            v-for="review in reviews"
-            :key="review.id"
-            class="bg-white border border-gray-200 rounded-xl p-6 hover:border-red-600 hover:shadow-lg transition-all"
-          >
-            <div class="flex justify-between items-start gap-4 mb-4 flex-wrap">
-              <div class="flex items-center gap-4 flex-1">
-                <div
-                  class="w-12 h-12 rounded-full bg-black text-white flex items-center justify-center text-xl font-bold flex-shrink-0"
-                >
-                  {{ review.reviewer.charAt(0) }}
-                </div>
-                <div class="flex flex-col gap-1.5">
-                  <span class="font-bold text-black">{{
-                    review.reviewer
-                  }}</span>
-                  <StarRating :rating="review.score" :show-score="false" />
-                </div>
-              </div>
-              <div class="flex gap-2">
-                <button
-                  @click="handleEdit(review)"
-                  class="w-10 h-10 px-2.5 bg-gray-100 hover:bg-black hover:text-white rounded-lg transition-colors flex items-center justify-center group"
-                  title="Edit"
-                >
-                  <span class="group-hover:text-white">EDIT</span>
-                </button>
-                <button
-                  @click="handleDelete(review)"
-                  class="w-10 h-10 px-7 bg-red-50 hover:bg-red-600 text-red-600 hover:text-white rounded-lg transition-colors flex items-center justify-center group"
-                  title="Delete"
-                >
-                  <span class="group-hover:grayscale group-hover:brightness-200"
-                    >DELETE</span
-                  >
-                </button>
-              </div>
-            </div>
-            <p class="text-gray-600 leading-relaxed">{{ review.comment }}</p>
-          </div>
-        </div>
+        <!-- Review List (component) -->
+        <ReviewList
+          :reviews="reviewStore.reviews"
+          :loading="reviewStore.loading"
+          @edit="handleEditReview"
+          @delete="handleDeleteReview"
+        />
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-@import url("https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap');
 
 * {
   font-family: "Oswald", sans-serif;

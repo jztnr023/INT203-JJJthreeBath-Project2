@@ -17,7 +17,7 @@ import Navbar from "./components/NavBar.vue";
 </template>
 
 <style scoped>
-@import url("https://fonts.g  oogleapis.com/css2?family=Oswald:wght@200..700&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap');
 
 * {
   font-family: "Oswald", sans-serif;

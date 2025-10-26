@@ -1,113 +1,118 @@
+import { ref } from "vue";
 import { defineStore } from "pinia";
-import axios from "axios";
 
 const API_URL = "http://localhost:3000/reviews";
 
-export const useReviewStore = defineStore("review", {
-  state: () => ({
-    reviews: [],
-    loading: false,
-    error: null,
-  }),
+async function handleResponse(res) {
+  if (res.ok) {
+    if (res.status === 204) return null;
+    const contentType = res.headers.get("content-type") || "";
+    return contentType.includes("application/json") ? res.json() : res.text();
+  } else {
+    const text = await res.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = text;
+    }
+    const err = new Error(res.statusText || "HTTP error");
+    err.status = res.status;
+    err.data = data;
+    throw err;
+  }
+}
 
-  getters: {
-    // Get reviews by movie ID
-    getReviewsByMovieId: (state) => (movieId) => {
-      return state.reviews.filter((review) => review.movieId === movieId);
-    },
-  },
+export const useReviewStore = defineStore("review", () => {
+  const reviews = ref([]);
 
-  actions: {
-    //  GET all reviews (tm2)
-    async fetchAllReviews() {
-      this.loading = true;
-      this.error = null;
-      try {
-        const response = await axios.get(API_URL);
-        this.reviews = response.data;
-      } catch (error) {
-        this.error = "Failed to fetch reviews";
-        console.error("Error fetching reviews:", error);
-        throw error;
-      } finally {
-        this.loading = false;
-      }
-    },
+  // Get reviews by movie ID (tm2)
+  function getReviewsByMovieId(movieId) {
+    return reviews.value.filter((review) => review.movieId === movieId);
+  }
 
-    // GET reviews by movie ID (tm2)
-    async fetchReviewsByMovieId(movieId) {
-      this.loading = true;
-      this.error = null;
-      try {
-        const response = await axios.get(`${API_URL}?movieId=${movieId}`);
-        this.reviews = response.data;
-      } catch (error) {
-        this.error = "Failed to fetch reviews";
-        console.error("Error fetching reviews:", error);
-        throw error;
-      } finally {
-        this.loading = false;
-      }
-    },
+  // GET all reviews (tm2)
+  async function fetchAllReviews() {
+    try {
+      const res = await fetch(API_URL);
+      const data = await handleResponse(res);
+      reviews.value = data;
+      return data;
+    } catch (err) {
+      console.error("Error fetching reviews:", err);
+      throw err;
+    }
+  }
 
-    // ADD new review (tm2)
-    async addReview(reviewData) {
-      this.loading = true;
-      this.error = null;
-      try {
-        const response = await axios.post(API_URL, reviewData);
-        this.reviews.push(response.data);
-        return response.data;
-      } catch (error) {
-        this.error = "Failed to add review";
-        console.error("Error adding review:", error);
-        throw error;
-      } finally {
-        this.loading = false;
-      }
-    },
+  // GET reviews by movie ID (tm2)
+  async function fetchReviewsByMovieId(movieId) {
+    try {
+      const url = `${API_URL}?movieId=${encodeURIComponent(movieId)}`;
+      const res = await fetch(url);
+      const data = await handleResponse(res);
+      reviews.value = data;
+      return data;
+    } catch (err) {
+      console.error("Error fetching reviews:", err);
+      throw err;
+    }
+  }
 
-    // UPDATE review (tm3)
-    async updateReview(id, updatedReview) {
-      this.loading = true;
-      this.error = null;
-      try {
-        const response = await axios.put(`${API_URL}/${id}`, updatedReview);
+  // ADD new review (tm2)
+  async function addReview(reviewData) {
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(reviewData),
+      });
+      const created = await handleResponse(res);
+      reviews.value.push(created);
+      return created;
+    } catch (err) {
+      console.error("Error adding review:", err);
+      throw err;
+    }
+  }
 
-        // Update in local state
-        const index = this.reviews.findIndex((review) => review.id === id);
-        if (index !== -1) {
-          this.reviews[index] = response.data;
-        }
+  // UPDATE review (tm3)
+  async function updateReview(id, updatedReview) {
+    try {
+      const res = await fetch(`${API_URL}/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedReview),
+      });
+      const updated = await handleResponse(res);
+      const index = reviews.value.findIndex((r) => r.id === id);
+      if (index !== -1) reviews.value[index] = updated;
+      return updated;
+    } catch (err) {
+      console.error("Error updating review:", err);
+      throw err;
+    }
+  }
 
-        return response.data;
-      } catch (error) {
-        this.error = "Failed to update review";
-        console.error("Error updating review:", error);
-        throw error;
-      } finally {
-        this.loading = false;
-      }
-    },
+  // DELETE review (tm3)
+  async function deleteReview(id) {
+    try {
+      const res = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+      await handleResponse(res);
+      reviews.value = reviews.value.filter((r) => r.id !== id);
+      return true;
+    } catch (err) {
+      console.error("Error deleting review:", err);
+      throw err;
+    }
+  }
 
-    // DELETE review (tm3)
-    async deleteReview(id) {
-      this.loading = true;
-      this.error = null;
-      try {
-        await axios.delete(`${API_URL}/${id}`);
-
-        // Remove from local state
-        this.reviews = this.reviews.filter((review) => review.id !== id);
-
-        return true;
-      } catch (error) {
-        this.error = "Failed to delete review";
-        console.error("Error deleting review:", error);
-        throw error;
-      } finally {
-        this.loading = false;
-      }
-    },
-  },
+  return {
+    reviews,
+    getReviewsByMovieId,
+    fetchAllReviews,
+    fetchReviewsByMovieId,
+    addReview,
+    updateReview,
+    deleteReview,
+  };
 });

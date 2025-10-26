@@ -37,15 +37,15 @@ watch(() => props.mode, (newMode) => {
 
 const handleSubmit = () => {
   const submitData = {
-    movieId: parseInt(formData.value.movieId),
+    movieId: Number(formData.value.movieId),
     reviewer: formData.value.reviewer,
     comment: formData.value.comment,
-    score: parseFloat(formData.value.score)
+    score: Number(formData.value.score)
   }
   
   // Include ID for edit mode
   if (props.mode === 'edit' && props.reviewData?.id) {
-    submitData.id = props.reviewData.id
+    submitData.id = Number(props.reviewData.id)
   }
   
   emit('submit', submitData)
@@ -70,7 +70,7 @@ const handleCancel = () => {
         </label>
         <input
           type="number"
-          v-model="formData.movieId"
+          v-model.number="formData.movieId"
           required
           :disabled="movieId !== null"
           class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-100 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
@@ -146,4 +146,3 @@ const handleCancel = () => {
     </form>
   </div>
 </template>
-<style scoped></style>

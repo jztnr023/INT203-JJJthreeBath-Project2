@@ -2,10 +2,11 @@
 import { ref, onMounted, computed } from "vue";
 import { useRoute } from "vue-router";
 import StarRating from "../components/StarRating.vue";
-import ReviewForm from "../components/ReviewForm.vue"; 
-import ReviewList from "../components/ReviewList.vue"; 
-// import { useMovieStore } from '../stores/movieStore' // wait tm1
-import { useReviewStore } from '../stores/reviewstore.js';
+import ReviewForm from "../components/ReviewForm.vue";
+import ReviewList from "../components/ReviewList.vue";
+import { useReviewStore } from "../stores/reviewstore.js";
+import * as movieApi from "../libs/MovieApi.js";
+import * as reviewApi from "../libs/ReviewApi.js";
 
 const route = useRoute();
 const reviewStore = useReviewStore();
@@ -16,36 +17,9 @@ const loading = ref(false);
 const error = ref(null);
 const movie = ref(null);
 const reviews = ref([]);
+const reviewsLoading = ref(false);
 const showAddReviewForm = ref(false);
-const editingReview = ref(null);
 const isEditMode = ref(false);
-
-// Mock Data (ชั่วคราว)
-const mockMovies = [
-  {
-    id: 1,
-    title: "Inception",
-    year: 2010,
-    genre: "Sci-Fi",
-    director: "Christopher Nolan",
-    poster:
-      "https://image.tmdb.org/t/p/original/ljsZTbVsrQSqZgWeep2B1QiDKuh.jpg",
-    summary:
-      "A thief who steals corporate secrets through dream-sharing technology is given the task of planting an idea.",
-    rating: 9.0,
-  },
-  {
-    id: 2,
-    title: "The Dark Knight",
-    year: 2008,
-    genre: "Action",
-    director: "Christopher Nolan",
-    poster: "https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
-    summary:
-      "Batman faces the Joker, a criminal mastermind who brings chaos to Gotham City.",
-    rating: 9.5,
-  },
-];
 
 // Fetch Movie
 const fetchMovie = async () => {
@@ -53,23 +27,29 @@ const fetchMovie = async () => {
   error.value = null;
 
   try {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    
-    const foundMovie = mockMovies.find((m) => m.id === movieId.value);
+    // Fetch movie from API
+    movie.value = await movieApi.getMovieById(movieId.value);
 
-    if (!foundMovie) {
-      movie.value = null;
-    } else {
-      movie.value = foundMovie;
-      
-      // Fetch reviews from reviewStore
-      await reviewStore.fetchReviewsByMovieId(movieId.value);
-    }
+    // Fetch reviews for this movie
+    await fetchReviews();
   } catch (err) {
     error.value = "Unable to load movie data. Please try again later.";
     console.error(err);
   } finally {
     loading.value = false;
+  }
+};
+
+// Fetch Reviews
+const fetchReviews = async () => {
+  reviewsLoading.value = true;
+  try {
+    reviews.value = await reviewApi.getReviewsByMovieId(movieId.value);
+  } catch (err) {
+    console.error("Failed to fetch reviews:", err);
+    reviews.value = [];
+  } finally {
+    reviewsLoading.value = false;
   }
 };
 
@@ -81,16 +61,18 @@ const handleImageError = (event) => {
 // Add Review
 const handleAddReview = async (reviewData) => {
   try {
-    await reviewStore.addReview(reviewData);
+    await reviewApi.addReview(reviewData);
     showAddReviewForm.value = false;
+    await fetchReviews(); // Refresh reviews
   } catch (error) {
-    alert("Failed to add review");
+    console.error("Failed to add review:", error);
+    alert("Failed to add review. Please try again.");
   }
 };
 
-// Edit Review
+// Edit Review - เก็บข้อมูลไว้ใน store
 const handleEditReview = (review) => {
-  editingReview.value = review;
+  reviewStore.setEditingReview(review);
   isEditMode.value = true;
   showAddReviewForm.value = true;
 };
@@ -98,22 +80,26 @@ const handleEditReview = (review) => {
 // Update Review
 const handleUpdateReview = async (reviewData) => {
   try {
-    await reviewStore.updateReview(editingReview.value.id, reviewData);
+    await reviewApi.updateReview(reviewStore.editingReview.id, reviewData);
     showAddReviewForm.value = false;
     isEditMode.value = false;
-    editingReview.value = null;
+    reviewStore.clearEditingReview();
+    await fetchReviews(); // Refresh reviews
   } catch (error) {
-    alert("Failed to update review");
+    console.error("Failed to update review:", error);
+    alert("Failed to update review. Please try again.");
   }
 };
 
-//  Delete Review
+// Delete Review
 const handleDeleteReview = async (reviewId) => {
   if (confirm("Are you sure you want to delete this review?")) {
     try {
-      await reviewStore.deleteReview(reviewId);
+      await reviewApi.deleteReview(reviewId);
+      await fetchReviews(); // Refresh reviews
     } catch (error) {
-      alert("Failed to delete review");
+      console.error("Failed to delete review:", error);
+      alert("Failed to delete review. Please try again.");
     }
   }
 };
@@ -131,7 +117,7 @@ const handleFormSubmit = (reviewData) => {
 const handleCancelForm = () => {
   showAddReviewForm.value = false;
   isEditMode.value = false;
-  editingReview.value = null;
+  reviewStore.clearEditingReview();
 };
 
 // Lifecycle
@@ -221,16 +207,19 @@ onMounted(() => {
           <div class="flex gap-3 flex-wrap">
             <span
               class="px-5 py-2 bg-black text-white rounded-full text-sm font-medium"
-              >{{ movie.year }}</span
             >
+              {{ movie.year }}
+            </span>
             <span
               class="px-5 py-2 bg-black text-white rounded-full text-sm font-medium"
-              >{{ movie.genre }}</span
             >
+              {{ movie.genre }}
+            </span>
             <span
               class="px-5 py-2 bg-black text-white rounded-full text-sm font-medium"
-              >{{ movie.director }}</span
             >
+              {{ movie.director }}
+            </span>
           </div>
 
           <div class="py-4">
@@ -259,20 +248,20 @@ onMounted(() => {
           </button>
         </div>
 
-        <!-- Review Form (component) -->
+        <!-- Review Form -->
         <ReviewForm
           v-if="showAddReviewForm"
           :mode="isEditMode ? 'edit' : 'add'"
-          :review-data="editingReview"
+          :review-data="reviewStore.editingReview"
           :movie-id="movieId"
           @submit="handleFormSubmit"
           @cancel="handleCancelForm"
         />
 
-        <!-- Review List (component) -->
+        <!-- Review List -->
         <ReviewList
-          :reviews="reviewStore.reviews"
-          :loading="reviewStore.loading"
+          :reviews="reviews"
+          :loading="reviewsLoading"
           @edit="handleEditReview"
           @delete="handleDeleteReview"
         />
@@ -282,7 +271,7 @@ onMounted(() => {
 </template>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap");
 
 * {
   font-family: "Oswald", sans-serif;

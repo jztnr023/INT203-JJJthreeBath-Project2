@@ -20,9 +20,6 @@
                     </div>
                 </div>
             </div>
-            <div>
-              <input type="text" class="border   rounded-md p-1 bg-white w-150" placeholder="Search..." autofocus >
-            </div>
             <nav class="hidden md:flex space-x-4">
                 <a href="#" class="text-sm font-medium text-white hover:text-red-500 transition duration-300">Home</a>
                 <a href="#" class="text-sm font-medium text-white hover:text-red-500 transition duration-300">New Movies</a>

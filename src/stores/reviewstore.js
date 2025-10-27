@@ -1,7 +1,7 @@
 import { ref } from "vue";
 import { defineStore } from "pinia";
 
-const API_URL = "http://localhost:3000/reviews";
+const API_URL = import.meta.env.VITE_API_URL;
 
 async function handleResponse(res) {
   if (res.ok) {

@@ -128,7 +128,6 @@ onMounted(() => {
 
 <template>
   <div class="min-h-screen bg-white">
-    <!-- Loading State -->
     <div
       v-if="loading"
       class="flex flex-col items-center justify-center min-h-[60vh] gap-5"
@@ -138,8 +137,7 @@ onMounted(() => {
       ></div>
       <p class="text-lg font-medium text-black">Loading...</p>
     </div>
-
-    <!-- Error State -->
+  
     <div
       v-else-if="error"
       class="flex flex-col items-center justify-center min-h-[60vh] text-center px-5 py-10"
@@ -155,7 +153,6 @@ onMounted(() => {
       </button>
     </div>
 
-    <!-- Movie Not Found -->
     <div
       v-else-if="!movie"
       class="flex flex-col items-center justify-center min-h-[60vh] text-center px-5 py-10"
@@ -173,9 +170,7 @@ onMounted(() => {
       </router-link>
     </div>
 
-    <!-- Movie Content -->
     <div v-else class="max-w-7xl mx-auto px-6 py-8">
-      <!-- Back Navigation -->
       <router-link
         to="/"
         class="inline-flex items-center gap-2 text-black font-semibold mb-8 py-2 hover:text-red-600 transition-colors group no-underline"
@@ -186,9 +181,7 @@ onMounted(() => {
         <span>Back</span>
       </router-link>
 
-      <!-- Movie Section -->
       <div class="grid md:grid-cols-[320px_1fr] gap-12 mb-16">
-        <!-- Poster -->
         <div>
           <img
             :src="movie.poster"
@@ -198,10 +191,9 @@ onMounted(() => {
           />
         </div>
 
-        <!-- Movie Details -->
         <div class="flex flex-col gap-6">
           <h1 class="text-5xl md:text-6xl font-bold text-black leading-tight">
-            {{ movie.title }}
+            {{ movie.title }} ({{ movie.year }})
           </h1>
 
           <div class="flex gap-3 flex-wrap">
@@ -235,7 +227,6 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Reviews Section -->
       <div class="border-t-2 border-gray-200 pt-12">
         <div class="flex justify-between items-center mb-8 flex-wrap gap-4">
           <h2 class="text-3xl font-bold text-black">Reviews</h2>
@@ -248,7 +239,6 @@ onMounted(() => {
           </button>
         </div>
 
-        <!-- Review Form -->
         <ReviewForm
           v-if="showAddReviewForm"
           :mode="isEditMode ? 'edit' : 'add'"
@@ -258,7 +248,6 @@ onMounted(() => {
           @cancel="handleCancelForm"
         />
 
-        <!-- Review List -->
         <ReviewList
           :reviews="reviews"
           :loading="reviewsLoading"
@@ -271,9 +260,5 @@ onMounted(() => {
 </template>
 
 <style scoped>
-@import url("https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap");
 
-* {
-  font-family: "Oswald", sans-serif;
-}
 </style>

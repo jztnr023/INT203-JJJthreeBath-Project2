@@ -1,39 +1,47 @@
 <script setup>
 import { onMounted, ref, computed } from "vue";
-import { getAllMovies } from "../libs/MovieApi.js";
+import { useMovieStore } from "../stores/MovieStore.js";
+import MovieList from "../components/MovieList.vue";
 
-const movies = ref([]);
-const searchMovie = ref("");
+const movieStore = useMovieStore();
+const showList = ref(false);
 
 onMounted(async () => {
-  movies.value = await getAllMovies();
+  await movieStore.fetchMovies();
 });
 
 const filteredMovies = computed(() => {
-  if (!searchMovie.value) {
-    return movies.value;
+  const q = movieStore.searchQuery || "";
+  if (!q) {
+    return movieStore.movies;
   }
-  return movies.value.filter((movie) =>
-    movie.title.toLowerCase().includes(searchMovie.value.toLowerCase())
+  return movieStore.movies.filter((movie) =>
+    movie.title.toLowerCase().includes(q.toLowerCase())
   );
 });
 </script>
 
 <template>
-  <div class="min-h-screen bg-black">
+  <div class="min-h-screen max-w-screen bg-black">
     <div>
-      <img src="../assets/imgs/F1_movie.jpg" class="w-full h-150" />
+      <RouterLink :to="{ name: 'MovieDetail', params: { id: 20 } }">
+        <img src="../assets/imgs/dune-black-3840x2160-15808.jpg" class="w-full h-auto" />
+      </RouterLink>
     </div>
-    <div class="flex justify-center mt-10">
-      <input
-        type="text"
-        class="border rounded-md p-1 bg-white w-150"
-        placeholder="Search..."
-        v-model="searchMovie"
-      />
+    <div class="flex justify-center">
+      <button
+        @click="showList = !showList"
+        class="border-none text-black rounded-md p-1 bg-white hover:bg-red-600 hover:scale-105 hover:text-black"
+      >
+        {{ showList ? 'Show Grid' : 'Show List' }}
+      </button>
     </div>
 
-    <div v-if="filteredMovies.length > 0" class="grid grid-cols-4 gap-6 p-4 mx-15 mt-5 rounded-lg bg-black/50">
+    <div v-if="showList">
+      <MovieList :movies="filteredMovies" />
+    </div>
+
+    <div v-else v-if="filteredMovies.length > 0" class="grid grid-cols-4 gap-4 p-4 mx-15 mt-5 rounded-lg bg-black">
       <RouterLink
         v-for="movie in filteredMovies"
         :key="movie.id"

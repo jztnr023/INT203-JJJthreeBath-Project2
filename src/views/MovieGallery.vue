@@ -1,7 +1,6 @@
 <script setup>
-import { onMounted, ref } from "vue";
+import { onMounted, ref, computed } from "vue";
 import { getAllMovies } from "../libs/MovieApi.js";
-import { computed } from "vue";
 
 const movies = ref([]);
 const searchMovie = ref("");
@@ -34,22 +33,25 @@ const filteredMovies = computed(() => {
       />
     </div>
 
-    <div v-if="filteredMovies.length > 0">
-      <div class="grid grid-cols-4 gap-6 p-4 mx-15 mt-5 rounded-lg bg-black/50">
+    <div v-if="filteredMovies.length > 0" class="grid grid-cols-4 gap-6 p-4 mx-15 mt-5 rounded-lg bg-black/50">
+      <RouterLink
+        v-for="movie in filteredMovies"
+        :key="movie.id"
+        :to="{ name: 'MovieDetail', params: { id: movie.id } }"
+        class="block"
+      >
         <div
-          v-for="movie in filteredMovies"
-          :key="movie.id"
           class="bg-white text-black border rounded-lg overflow-hidden shadow-lg hover:bg-red-600 hover:text-white hover:border-red-600 hover:scale-105 transition duration-400"
         >
-          <img :src="movie.poster" class="max-w-full h-130 object-cover" />
+          <img :src="movie.poster" class="w-full h-auto object-cover" />
           <div class="p-4 text-center">
-            <h2 class="text-lg font-bold mb-2">{{ movie.title }}</h2>
+            <h2 class="text-lg font-bold mb-2">{{ movie.title }} ({{ movie.year }})</h2>
             <p>Genre: {{ movie.genre }}</p>
             <p>Rating: {{ movie.rating }}</p>
             <p>Director: {{ movie.director }}</p>
           </div>
         </div>
-      </div>
+      </RouterLink>
     </div>
   </div>
 </template>

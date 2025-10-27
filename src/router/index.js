@@ -10,7 +10,7 @@ const routes = [
     component: MoviesGallery,
   },
   {
-    path: "/movie/:id",
+    path: "/movies/:id",
     name: "MovieDetail",
     component: MovieDetail,
   },

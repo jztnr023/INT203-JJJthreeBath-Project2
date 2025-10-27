@@ -1,9 +1,12 @@
 <script setup>
+import { useMovieStore } from "../stores/MovieStore.js";
+import { RouterLink } from 'vue-router'; 
+const movieStore = useMovieStore();
 
 </script>
  
 <template>
-<div class="w-full bg-black border-red-600 shadow-2xl ">
+<div class="w-full bg-black border-red-600 shadow-2xl fixed top-0 z-50">
     <div class="lg:px-8">
         <div class="flex items-center justify-between py-2">
             <div class="flex items-center gap-5">
@@ -21,11 +24,19 @@
                 </div>
             </div>
             <nav class="hidden md:flex space-x-4">
-                <a href="#" class="text-sm font-medium text-white hover:text-red-500 transition duration-300">Home</a>
+                <RouterLink :to="{ name: 'MoviesGallery'}" class="text-sm font-medium text-white hover:text-red-500 transition duration-300"><p>Home</p></RouterLink>                
                 <a href="#" class="text-sm font-medium text-white hover:text-red-500 transition duration-300">New Movies</a>
                 <a href="#" class="text-sm font-medium text-white hover:text-red-500 transition duration-300">Articles</a>
                 <a href="#" class="text-sm font-medium text-white hover:text-red-500 transition duration-300">About Us</a>
             </nav>
+            <div class="flex items-center">
+                <input
+                    v-model="movieStore.searchQuery"
+                    type="text"
+                    class="border rounded-md p-1 bg-white w-64"
+                    placeholder="Search movies..."
+                />
+            </div>
             </div>
     </div>
 </div>

@@ -4,107 +4,74 @@ import { useRoute } from "vue-router";
 import StarRating from "../components/StarRating.vue";
 import ReviewForm from "../components/ReviewForm.vue";
 import ReviewList from "../components/ReviewList.vue";
-import { useReviewStore } from "../stores/reviewstore.js";
-import * as movieApi from "../libs/MovieApi.js";
-import * as reviewApi from "../libs/ReviewApi.js";
+import { useMovieStore } from "../stores/MovieStore.js";
+import { useReviewStore } from "../stores/ReviewStore.js";
 
 const route = useRoute();
+const movieStore = useMovieStore();
 const reviewStore = useReviewStore();
 const movieId = computed(() => parseInt(route.params.id));
 
-// State
-const loading = ref(false);
-const error = ref(null);
-const movie = ref(null);
-const reviews = ref([]);
-const reviewsLoading = ref(false);
 const showAddReviewForm = ref(false);
 const isEditMode = ref(false);
 
-// Fetch Movie
-const fetchMovie = async () => {
-  loading.value = true;
+const movie = computed(() => movieStore.currentMovie);
+const loading = computed(() => !movieStore.currentMovie);
+const error = ref(null);
+
+const fetchData = async () => {
   error.value = null;
+  movieStore.currentMovie = null;
 
   try {
-    // Fetch movie from API
-    movie.value = await movieApi.getMovieById(movieId.value);
-
-    // Fetch reviews for this movie
-    await fetchReviews();
+    await movieStore.fetchMovieById(movieId.value);
+    await reviewStore.fetchReviewsByMovieId(movieId.value);
   } catch (err) {
-    error.value = "Unable to load movie data. Please try again later.";
     console.error(err);
-  } finally {
-    loading.value = false;
+    movieStore.currentMovie = { error: true };
+    error.value = "Unable to load movie data. Please try again later."; 
   }
 };
 
-// Fetch Reviews
-const fetchReviews = async () => {
-  reviewsLoading.value = true;
-  try {
-    reviews.value = await reviewApi.getReviewsByMovieId(movieId.value);
-  } catch (err) {
-    console.error("Failed to fetch reviews:", err);
-    reviews.value = [];
-  } finally {
-    reviewsLoading.value = false;
-  }
-};
-
-// Handle Image Error
 const handleImageError = (event) => {
   event.target.src = "https://via.placeholder.com/500x750?text=No+Image";
 };
 
-// Add Review
 const handleAddReview = async (reviewData) => {
   try {
-    await reviewApi.addReview(reviewData);
+    await reviewStore.addReview(reviewData);
     showAddReviewForm.value = false;
-    await fetchReviews(); // Refresh reviews
   } catch (error) {
-    console.error("Failed to add review:", error);
     alert("Failed to add review. Please try again.");
   }
 };
 
-// Edit Review - เก็บข้อมูลไว้ใน store
 const handleEditReview = (review) => {
   reviewStore.setEditingReview(review);
   isEditMode.value = true;
   showAddReviewForm.value = true;
 };
 
-// Update Review
 const handleUpdateReview = async (reviewData) => {
   try {
-    await reviewApi.updateReview(reviewStore.editingReview.id, reviewData);
+    await reviewStore.updateReview(reviewStore.editingReview.id, reviewData);
     showAddReviewForm.value = false;
     isEditMode.value = false;
-    reviewStore.clearEditingReview();
-    await fetchReviews(); // Refresh reviews
   } catch (error) {
-    console.error("Failed to update review:", error);
     alert("Failed to update review. Please try again.");
   }
 };
 
-// Delete Review
 const handleDeleteReview = async (reviewId) => {
   if (confirm("Are you sure you want to delete this review?")) {
     try {
-      await reviewApi.deleteReview(reviewId);
-      await fetchReviews(); // Refresh reviews
+      await reviewStore.deleteReview(reviewId, movieId.value);
     } catch (error) {
-      console.error("Failed to delete review:", error);
       alert("Failed to delete review. Please try again.");
     }
   }
 };
 
-// Form Submit Handler
 const handleFormSubmit = (reviewData) => {
   if (isEditMode.value) {
     handleUpdateReview(reviewData);
@@ -113,21 +80,20 @@ const handleFormSubmit = (reviewData) => {
   }
 };
 
-// Cancel Form
 const handleCancelForm = () => {
   showAddReviewForm.value = false;
   isEditMode.value = false;
   reviewStore.clearEditingReview();
 };
 
-// Lifecycle
 onMounted(() => {
-  fetchMovie();
+  fetchData();
 });
 </script>
 
 <template>
   <div class="min-h-screen bg-white">
+    <!-- Loading State -->
     <div
       v-if="loading"
       class="flex flex-col items-center justify-center min-h-[60vh] gap-5"
@@ -137,7 +103,8 @@ onMounted(() => {
       ></div>
       <p class="text-lg font-medium text-black">Loading...</p>
     </div>
-  
+
+    <!-- Error State -->
     <div
       v-else-if="error"
       class="flex flex-col items-center justify-center min-h-[60vh] text-center px-5 py-10"
@@ -146,31 +113,16 @@ onMounted(() => {
       <h2 class="text-3xl font-bold text-black mb-3">Something went wrong</h2>
       <p class="text-base text-gray-500 mb-6 max-w-lg">{{ error }}</p>
       <button
-        @click="fetchMovie"
+        @click="fetchData"
         class="px-8 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-all hover:-translate-y-0.5"
       >
         Try Again
       </button>
     </div>
 
-    <div
-      v-else-if="!movie"
-      class="flex flex-col items-center justify-center min-h-[60vh] text-center px-5 py-10"
-    >
-      <div class="text-8xl mb-5">🎬</div>
-      <h2 class="text-3xl font-bold text-black mb-3">Movie Not Found</h2>
-      <p class="text-base text-gray-500 mb-6">
-        Sorry, we couldn't find the movie you're looking for.
-      </p>
-      <router-link
-        to="/"
-        class="inline-block px-8 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-all hover:-translate-y-0.5 no-underline"
-      >
-        Back to Home
-      </router-link>
-    </div>
-
-    <div v-else class="max-w-7xl mx-auto px-6 py-8">
+    <!-- Movie Content -->
+    <div v-else-if="movie && !movie.error" class="max-w-7xl mx-auto px-6 py-8">
+      <!-- Back Navigation -->
       <router-link
         to="/"
         class="inline-flex items-center gap-2 text-black font-semibold mb-8 py-2 hover:text-red-600 transition-colors group no-underline"
@@ -181,7 +133,9 @@ onMounted(() => {
         <span>Back</span>
       </router-link>
 
+      <!-- Movie Section -->
       <div class="grid md:grid-cols-[320px_1fr] gap-12 mb-16">
+        <!-- Poster -->
         <div>
           <img
             :src="movie.poster"
@@ -191,9 +145,10 @@ onMounted(() => {
           />
         </div>
 
+        <!-- Movie Details -->
         <div class="flex flex-col gap-6">
           <h1 class="text-5xl md:text-6xl font-bold text-black leading-tight">
-            {{ movie.title }} ({{ movie.year }})
+            {{ movie.title }}
           </h1>
 
           <div class="flex gap-3 flex-wrap">
@@ -227,6 +182,7 @@ onMounted(() => {
         </div>
       </div>
 
+      <!-- Reviews Section -->
       <div class="border-t-2 border-gray-200 pt-12">
         <div class="flex justify-between items-center mb-8 flex-wrap gap-4">
           <h2 class="text-3xl font-bold text-black">Reviews</h2>
@@ -239,6 +195,7 @@ onMounted(() => {
           </button>
         </div>
 
+        <!-- Review Form -->
         <ReviewForm
           v-if="showAddReviewForm"
           :mode="isEditMode ? 'edit' : 'add'"
@@ -248,9 +205,9 @@ onMounted(() => {
           @cancel="handleCancelForm"
         />
 
+        <!-- Review List -->
         <ReviewList
-          :reviews="reviews"
-          :loading="reviewsLoading"
+          :reviews="reviewStore.reviews"
           @edit="handleEditReview"
           @delete="handleDeleteReview"
         />
@@ -260,5 +217,9 @@ onMounted(() => {
 </template>
 
 <style scoped>
+@import url("https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap");
 
+* {
+  font-family: "Oswald", sans-serif;
+}
 </style>

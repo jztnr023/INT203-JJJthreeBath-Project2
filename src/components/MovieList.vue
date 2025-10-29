@@ -29,7 +29,6 @@ const props = defineProps({
         </div>
       </div>
     </div>
-    <div v-else class="text-center text-white">No movies found.</div>
   </div>
 </template>
 

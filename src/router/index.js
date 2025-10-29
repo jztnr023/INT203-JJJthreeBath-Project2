@@ -5,6 +5,10 @@ import MovieDetail from '../views/MovieDetail.vue'
 const history = createWebHistory()
 const routes = [
   {
+    path: "/",
+    redirect: "/movies",
+  },
+  {
     path: "/movies",
     name: "MoviesGallery",
     component: MoviesGallery,
